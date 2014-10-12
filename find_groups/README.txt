@@ -1,0 +1,1 @@
+This is a python script for nuke to help collecting the all the "Group" nodes inside the nuke script.
