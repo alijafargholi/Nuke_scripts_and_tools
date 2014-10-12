@@ -1,0 +1,434 @@
+#! /Applications/Nuke8.0v3/Nuke8.0v3.app/Contents/MacOS/libnuke-8.0.v3.dylib -nx
+version 8.0 v3
+Gizmo {
+ inputs 2
+ tile_color 0xff0000ff
+ addUserKnob {20 att l Attributes}
+ addUserKnob {41 in_1 l "Position Pass" t "Select the position pass from the pulldown " T Shuffle1.in}
+ addUserKnob {26 mask_mix l "Mask Mix" t "Using this knob, you can mix both mask based on available oporation\n" T ""}
+ addUserKnob {4 mask_a l "" -STARTLINE M {"Mask A - Spherical " "Mask A - Cubical" "" "" ""}}
+ addUserKnob {4 operations l "" t "Average (A+B)/2\nDifference abs(A-B)\nFrom B-A\nMask Ba\nMatte Aa+B(1-a) (unpremultiplied over)\nMax max(A,B)\nMin min(A,B)\nMinus A-B\nMultiply AB, A if A<0 and B<0\nOut A(1-b)\nOver A+B(1-a)\nPlus A+B\nStencil B(1-a)\nUnder A(1-b)+B" -STARTLINE M {Average Difference From In Mask Matte Max Min Minus Multiply Out Over Plus Stencil Under}}
+ operations Over
+ addUserKnob {4 mask_b l "" -STARTLINE M {"Mask B - Cubical" "Mask B - Spherical" "" "" ""}}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {6 center_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {20 spherical_mask l "Spherical Mask" n 1}
+ addUserKnob {6 disable_1 l Disable t "When is checked, the Spherical Mask is disabled" +STARTLINE}
+ addUserKnob {18 center l "Center XYZ" t "This is the center piont of the mask, all the area will be calculated based on this point. You could use the color picker and pint to the wanted center"}
+ center {0 0 0}
+ addUserKnob {7 rad_mult l "Radius Multiplier" t "Radius of the spherical mask" R -3 3}
+ rad_mult 0.5
+ addUserKnob {7 in_softness l "Inner Edge Softness" t "Spherical edge softness" R 0 4}
+ in_softness 1
+ addUserKnob {7 out_softness l "Outer Edge Softness" R -1 1}
+ addUserKnob {20 endGroup n -1}
+ addUserKnob {26 "" +STARTLINE}
+ addUserKnob {20 cubical_mask l "Cubical Mask" n 1}
+ addUserKnob {6 disable_2 l Disable t "When is checked, the Cubical Mask is disabled" +STARTLINE}
+ addUserKnob {18 box_center l "Center XYZ" t "Center Of the box "}
+ box_center {0 0 0}
+ addUserKnob {6 box_center_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {7 box_width l Width t "The X axe" R 0 100}
+ box_width 2
+ addUserKnob {7 box_height l Height t "The Y axe" R 0 100}
+ box_height 2
+ addUserKnob {7 box_depth l Depth t "The Z axe" R 0 100}
+ box_depth 2
+ addUserKnob {7 box_in_softness l "Inner Edge Softness" R 0 4}
+ box_in_softness 1
+ addUserKnob {7 box_out_softness l "Outer Edge Softness" R -1 1}
+ addUserKnob {20 endGroup_1 l endGroup n -1}
+ addUserKnob {20 help_1 l Help}
+ addUserKnob {22 wiki l Wiki T "import webbrowser\nwebbrowser.open(\"http://alijafargholi.com/2014/10/nuke-mask-from-position/\")" +STARTLINE}
+ addUserKnob {22 contact l "Contact Me" -STARTLINE T "import webbrowser\nwebbrowser.open(\"http://alijafargholi.com/contact/\")"}
+}
+ Input {
+  inputs 0
+  name mask
+  xpos -190
+  ypos 741
+  number 1
+ }
+ Invert {
+  name Invert1
+  xpos -190
+  ypos 787
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos -40
+  ypos -409
+ }
+ Dot {
+  name Dot10
+  xpos -9
+  ypos -309
+ }
+set N22c85330 [stack 0]
+ Dot {
+  name Dot9
+  xpos 141
+  ypos -309
+ }
+ Dot {
+  name Dot8
+  xpos 141
+  ypos -209
+ }
+set Nfc83adc0 [stack 0]
+push $N22c85330
+ Shuffle {
+  in none
+  name Shuffle1
+  label "Point Pass Shuffle\n"
+  xpos -40
+  ypos -263
+ }
+ ShuffleCopy {
+  inputs 2
+  name ShuffleCopy1
+  label "Copy in the original alpha"
+  xpos -40
+  ypos -213
+ }
+ Dot {
+  name Dot7
+  xpos -9
+  ypos -159
+ }
+set N3aace760 [stack 0]
+ Shuffle {
+  alpha black
+  name remove_alpha
+  xpos -40
+  ypos -59
+ }
+ Dot {
+  name main_pipe
+  xpos -9
+  ypos 241
+ }
+set N20249920 [stack 0]
+push $N3aace760
+ Dot {
+  name Dot5
+  xpos 291
+  ypos -159
+ }
+ Dot {
+  name Dot2
+  label Spherical
+  note_font_size 50
+  note_font_color 0xff00ffff
+  xpos 291
+  ypos -59
+ }
+ Expression {
+  temp_name0 radiuse
+  temp_expr0 "1 - parent.rad_mult"
+  temp_name3 map
+  temp_expr3 "sqrt((r-parent.center.r)*(r-parent.center.r)+(g-parent.center.g)*(g-parent.center.g)+(b-parent.center.b)*(b-parent.center.b)) * radiuse"
+  expr3 "(1-map) * a"
+  name Expression3
+  tile_color 0x1fff00ff
+  xpos 260
+  ypos 91
+ }
+ Grade {
+  channels rgba
+  blackpoint {{parent.out_softness}}
+  whitepoint {{parent.in_softness}}
+  name edge_softness
+  xpos 260
+  ypos 141
+ }
+ Expression {
+  expr3 "smoothstep(0, 1, a)"
+  name Expression1
+  tile_color 0x7fff00ff
+  xpos 260
+  ypos 191
+ }
+ Switch {
+  inputs 2
+  which {{parent.disable_1}}
+  name disable_spherical
+  tile_color 0xff000000
+  xpos 260
+  ypos 241
+ }
+set N1d1b2c00 [stack 0]
+ Dot {
+  name Dot3
+  xpos 291
+  ypos 291
+ }
+set N2d816110 [stack 0]
+push $N20249920
+push $N3aace760
+ Dot {
+  name Dot6
+  xpos -309
+  ypos -159
+ }
+ Dot {
+  name Dot1
+  label "Cubical "
+  note_font_size 50
+  note_font_color 0xff0000ff
+  xpos -309
+  ypos -59
+ }
+ Expression {
+  temp_name0 new_r
+  temp_expr0 "min(smoothstep(box_width,0,r-parent.box_center.r), smoothstep(-box_width,0,r-parent.box_center.r))"
+  temp_name1 new_g
+  temp_expr1 "min(smoothstep(box_height,0,g-parent.box_center.g), smoothstep(-box_height,0,g-parent.box_center.g))"
+  temp_name2 new_b
+  temp_expr2 "min(smoothstep(box_depth,0,b-parent.box_center.b), smoothstep(-box_depth,0,b-parent.box_center.b))"
+  expr3 min(new_r,new_g,new_b)
+  name Expression2
+  tile_color 0x1fff00ff
+  xpos -340
+  ypos 91
+ }
+ Grade {
+  channels rgba
+  blackpoint {{parent.box_out_softness}}
+  whitepoint {{parent.box_in_softness}}
+  name edge_softness1
+  xpos -340
+  ypos 141
+ }
+ Switch {
+  inputs 2
+  which {{parent.disable_2}}
+  name disable_cubical
+  tile_color 0xff000000
+  xpos -340
+  ypos 241
+ }
+set N22c9b7b0 [stack 0]
+ Dot {
+  name Dot4
+  xpos -309
+  ypos 291
+ }
+set N2d8056b0 [stack 0]
+ Switch {
+  inputs 2
+  which {{parent.mask_a}}
+  name mask_cubical_swith
+  xpos -340
+  ypos 341
+ }
+set N413a5c90 [stack 0]
+push $N2d8056b0
+push $N2d816110
+ Switch {
+  inputs 2
+  which {{parent.mask_a}}
+  name mask_spherical_switch
+  xpos 260
+  ypos 341
+ }
+set N2d83bde0 [stack 0]
+ Merge2 {
+  inputs 2
+  operation under
+  name mask_mix_14
+  xpos 1010
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation stencil
+  name mask_mix_13
+  xpos 860
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation plus
+  name mask_mix_12
+  xpos 710
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  name mask_mix_11
+  xpos 560
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation out
+  name mask_mix_10
+  xpos 410
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation multiply
+  name mask_mix_9
+  xpos 260
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation minus
+  name mask_mix_8
+  xpos 110
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation min
+  name mask_mix_7
+  xpos -40
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation max
+  name mask_mix_6
+  xpos -190
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation matte
+  name mask_mix_5
+  xpos -340
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation mask
+  name mask_mix_4
+  xpos -490
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation in
+  name mask_mix_2
+  xpos -640
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation from
+  name mask_mix_0
+  xpos -790
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation difference
+  name mask_mix_1
+  xpos -940
+  ypos 441
+ }
+push $N413a5c90
+push $N2d83bde0
+ Merge2 {
+  inputs 2
+  operation average
+  name mask_mix_3
+  xpos -1090
+  ypos 441
+ }
+ Switch {
+  inputs 15
+  which {{parent.operations}}
+  name Switch1
+  xpos -40
+  ypos 541
+ }
+push $N1d1b2c00
+ Switch {
+  inputs 2
+  which {{"\[python -execlocal if\\ nuke.thisGroup().knob('disable_2').getValue()\\ ==\\ 1\\ and\\ nuke.thisGroup().knob('disable_1').getValue()\\ ==\\ 0:\\n\\ ret\\ =\\ 0\\nelse:\\n\\ ret\\ =\\ 1]"}}
+  name Switch3
+  tile_color 0xe955ffff
+  label "If the Cubobcal mask is disbaled,\nIgnore the merge nodes"
+  xpos -40
+  ypos 632
+ }
+push $N22c9b7b0
+ Switch {
+  inputs 2
+  which {{"\[python -execlocal if\\ nuke.thisGroup().knob('disable_2').getValue()\\ ==\\ 0\\ and\\ nuke.thisGroup().knob('disable_1').getValue()\\ ==\\ 1:\\n\\ ret\\ =\\ 0\\nelse:\\n\\ ret\\ =\\ 1]"}}
+  name Switch2
+  tile_color 0xe955ffff
+  label "If the sphercal mask is disabled, \nIgonre the merge nodes"
+  xpos -40
+  ypos 682
+ }
+push $Nfc83adc0
+ Dot {
+  name Dot12
+  xpos 141
+  ypos 741
+ }
+ Switch {
+  inputs 2
+  which {{"\[python -execlocal if\\ nuke.thisGroup().knob('disable_2').getValue()\\ ==\\ 1\\ and\\ nuke.thisGroup().knob('disable_1').getValue()\\ ==\\ 1:\\n\\ ret\\ =\\ 0\\nelse:\\n\\ ret\\ =\\ 1]"}}
+  name Switch4
+  tile_color 0xe955ffff
+  label "if both of the mask are disabled, ignore the \ngraphe and pass through the inpput mask"
+  xpos -40
+  ypos 732
+ }
+ Merge2 {
+  inputs 2
+  operation stencil
+  name Merge1
+  selected true
+  xpos -40
+  ypos 791
+ }
+ Shuffle {
+  in alpha
+  red alpha
+  green alpha
+  blue alpha
+  name output_alpha
+  tile_color 0x47000000
+  xpos -40
+  ypos 891
+ }
+ Output {
+  name Output1
+  xpos -40
+  ypos 941
+ }
+end_group
